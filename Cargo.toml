@@ -1,0 +1,14 @@
+[package]
+name = "index-utils"
+version = "1.0.0"
+authors = ["Bram van den Heuvel <bram@vandenheuvel.online>"]
+edition = "2018"
+description = "Utilities for working with indices"
+repository = "https://github.com/vandenheuvel/index-utils"
+license = "GPL-3.0-only"
+
+keywords = ["index", "sparse", "utilities"]
+categories = ["algorithms", "data-structures"]
+
+[dev-dependencies]
+relp-num = "0.0.5"
