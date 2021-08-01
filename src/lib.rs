@@ -85,8 +85,8 @@ pub fn remove_sparse_indices<T>(vector: &mut Vec<(usize, T)>, indices: &[usize])
 ///
 /// A vector with sparse elements by sorted and unique index.
 pub fn merge_sparse_indices<I: Ord, T: Eq, U>(
-    left: impl Iterator<Item=(I, T)> + Sized,
-    right: impl Iterator<Item=(I, T)> + Sized,
+    left: impl Iterator<Item=(I, T)>,
+    right: impl Iterator<Item=(I, T)>,
     operation: impl Fn(T, T) -> U,
     operation_left: impl Fn(T) -> U,
     operation_right: impl Fn(T) -> U,

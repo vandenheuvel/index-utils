@@ -1,6 +1,6 @@
 [package]
 name = "index-utils"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Bram van den Heuvel <bram@vandenheuvel.online>"]
 edition = "2018"
 description = "Utilities for working with indices"
