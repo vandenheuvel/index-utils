@@ -6,6 +6,11 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::mem::swap;
 
+#[cfg(feature = "num-traits")]
+pub use num::inner_product;
+#[cfg(feature = "num-traits")]
+mod num;
+
 /// Reduce the size of the vector by removing values.
 ///
 /// # Arguments
