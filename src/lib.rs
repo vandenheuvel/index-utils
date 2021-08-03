@@ -237,57 +237,65 @@ mod test {
     #[test]
     fn test_remove_indices() {
         let mut v = vec![0f64, 1f64, 2f64];
-        remove_indices(&mut v, &vec![1]);
+        remove_indices(&mut v, &[1]);
         assert_eq!(v, vec![0f64, 2f64]);
 
         let mut v = vec![3f64, 0f64, 0f64];
-        remove_indices(&mut v, &vec![0]);
+        remove_indices(&mut v, &[0]);
         assert_eq!(v, vec![0f64, 0f64]);
 
         let mut v = vec![0f64, 0f64, 2f64, 3f64, 0f64, 5f64, 0f64, 0f64, 0f64, 9f64];
-        remove_indices(&mut v, &vec![3, 4, 6]);
+        remove_indices(&mut v, &[3, 4, 6]);
         assert_eq!(v, vec![0f64, 0f64, 2f64, 5f64, 0f64, 0f64, 9f64]);
 
         let mut v = vec![0f64];
-        remove_indices(&mut v, &vec![0]);
+        remove_indices(&mut v, &[0]);
         assert_eq!(v, vec![]);
 
         let mut v: Vec<i32> = vec![];
-        remove_indices(&mut v, &vec![]);
+        remove_indices(&mut v, &[]);
         assert_eq!(v, vec![]);
     }
 
     #[test]
     fn test_remove_sparse_indices() {
-        // Removing value not present
-        let mut tuples = vec![(0, 3f64)];
-        let indices = vec![1];
-        remove_sparse_indices(&mut tuples, &indices);
-        assert_eq!(tuples, vec![(0, 3f64)]);
-
-        // Removing present value, index should be adjusted
-        let mut tuples = vec![(0, 0f64), (2, 2f64)];
-        let indices = vec![0];
-        remove_sparse_indices(&mut tuples, &indices);
-        assert_eq!(tuples, vec![(1, 2f64)]);
-
-        // Empty vec
-        let mut tuples: Vec<(usize, i32)> = vec![];
-        let indices = vec![0, 1, 1_000];
-        remove_sparse_indices(&mut tuples, &indices);
-        assert_eq!(tuples, vec![]);
-
         // Empty vec, removing nothing
         let mut tuples: Vec<(usize, i32)> = vec![];
-        let indices = vec![];
-        remove_sparse_indices(&mut tuples, &indices);
+        remove_sparse_indices(&mut tuples, &[]);
         assert_eq!(tuples, vec![]);
 
         // Non-empty vec, removing nothing
         let mut tuples = vec![(1_000, 1f64)];
-        let indices = vec![];
-        remove_sparse_indices(&mut tuples, &indices);
+        remove_sparse_indices(&mut tuples, &[]);
         assert_eq!(tuples, vec![(1_000, 1f64)]);
+
+        // Empty vec
+        let mut tuples: Vec<(usize, i32)> = vec![];
+        remove_sparse_indices(&mut tuples, &[0, 1, 1_000]);
+        assert_eq!(tuples, vec![]);
+
+        // Removing value not present, index above
+        let mut tuples = vec![(0, 3f64)];
+        remove_sparse_indices(&mut tuples, &[1]);
+        assert_eq!(tuples, vec![(0, 3f64)]);
+
+        // Removing value not present, index below
+        let mut tuples = vec![(2, 3f64)];
+        remove_sparse_indices(&mut tuples, &[1]);
+        assert_eq!(tuples, vec![(1, 3f64)]);
+
+        // Removing present value, index should be adjusted
+        let mut tuples = vec![(0, 0f64), (2, 2f64)];
+        remove_sparse_indices(&mut tuples, &[0]);
+        assert_eq!(tuples, vec![(1, 2f64)]);
+
+        let mut tuples = vec![(0, 0), (2, 2), (4, 4)];
+        remove_sparse_indices(&mut tuples, &[0, 3]);
+        assert_eq!(tuples, vec![(1, 2), (2, 4)]);
+
+        let mut tuples = vec![(0, 0), (2, 2), (4, 4)];
+        remove_sparse_indices(&mut tuples, &[0, 3, 4]);
+        assert_eq!(tuples, vec![(1, 2)]);
     }
 
     #[test]

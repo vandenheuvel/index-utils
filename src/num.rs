@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::ops::{Mul, AddAssign};
 use std::cmp::Ordering;
 use std::mem::swap;
@@ -17,12 +16,12 @@ use std::mem::swap;
 /// # Return value
 ///
 /// A vector with sparse elements by sorted and unique index.
-pub fn inner_product<I: Ord, S, T: Borrow<S>, O>(
-    mut left: impl Iterator<Item=(I, T)>,
-    mut right: impl Iterator<Item=(I, T)>,
+pub fn inner_product<I: Ord, T1, T2, O>(
+    mut left: impl Iterator<Item=(I, T1)>,
+    mut right: impl Iterator<Item=(I, T2)>,
 ) -> O
 where
-    for<'r> &'r S: Mul<Output=O>,
+    T1: Mul<T2, Output=O>,
     O: num_traits::Zero + AddAssign,
 {
     let mut total = O::zero();
@@ -39,9 +38,9 @@ where
                             new_left_value
                         };
 
-                        total += left_old_value.borrow() * right_value.borrow();
+                        total += left_old_value * right_value;
                     } else {
-                        total += left_value.borrow() * right_value.borrow();
+                        total += left_value * right_value;
                         break;
                     }
                 }
@@ -51,7 +50,7 @@ where
                             match left_next_index.cmp(&right_index) {
                                 Ordering::Less => {}
                                 Ordering::Equal => {
-                                    total += new_left_value.borrow() * right_value.borrow();
+                                    total += new_left_value * right_value;
                                     if let Some((left_next_index, new_left_value)) = left.next() {
                                         left_index = left_next_index;
                                         left_value = new_left_value;
@@ -87,7 +86,7 @@ mod test {
     fn test_inner_product() {
         let result: i32 = inner_product(
             empty::<(usize, i32)>(),
-            empty(),
+            empty::<(_, i32)>(),
         );
         assert_eq!(result, 0);
 
@@ -98,8 +97,14 @@ mod test {
         assert_eq!(result, 0);
 
         let result = inner_product(
+            empty::<(usize, &i32)>(),
             [(0, 1)].into_iter(),
-            empty(),
+        );
+        assert_eq!(result, 0);
+
+        let result: i32 = inner_product(
+            [(0, 1)].into_iter(),
+            empty::<(_, i32)>(),
         );
         assert_eq!(result, 0);
 
