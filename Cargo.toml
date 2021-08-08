@@ -2,7 +2,7 @@ cargo-features = ["edition2021"]
 
 [package]
 name = "index-utils"
-version = "2.0.0"
+version = "2.1.0"
 authors = ["Bram van den Heuvel <bram@vandenheuvel.online>"]
 edition = "2021"
 description = "Utilities for working with indices"
