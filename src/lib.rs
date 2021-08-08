@@ -25,19 +25,20 @@ pub fn remove_indices<T>(vector: &mut Vec<T>, indices: &[usize]) {
     debug_assert!(indices.iter().all(|&i| i < vector.len()));
 
     let mut i = 0;
-    let mut j = 0;
+    let mut vector_index = 0;
     vector.retain(|_| {
-        if i < indices.len() && j < indices[i] {
-            j += 1;
+        let keep = if i < indices.len() && vector_index < indices[i] {
             true
         } else if i < indices.len() { // must have j == to_remove[i]
-            j += 1;
             i += 1;
             false
         } else { // i == to_remove.len()
-            j += 1;
             true
-        }
+        };
+
+        vector_index += 1;
+
+        keep
     });
 }
 
@@ -105,7 +106,7 @@ pub fn merge_sparse_indices<I: Ord, T: Eq, U>(
     let mut right = right.peekable();
 
     while let (Some((left_index, _)), Some((right_index, _))) = (left.peek(), right.peek()) {
-        let (index, result) = match left_index.cmp(&right_index) {
+        let (index, result) = match left_index.cmp(right_index) {
             Ordering::Less => {
                 let (index, value) = left.next().unwrap();
 
@@ -155,14 +156,14 @@ pub fn merge_sparse_indices<I: Ord, T: Eq, U>(
 /// A vector with sparse elements by sorted and unique index.
 pub fn merge_sparse_indices_intersect<I: Ord, T, U>(
     mut left: impl Iterator<Item=(I, T)>,
-    mut right: impl Iterator<Item=(I, T)>,
+    right: impl Iterator<Item=(I, T)>,
     operation: impl Fn(T, T) -> U,
     is_not_default: impl Fn(&U) -> bool,
 ) -> Vec<(I, U)> {
     if let Some((mut left_index, mut left_value)) = left.next() {
         let mut results = Vec::new();
 
-        while let Some((right_index, right_value)) = right.next() {
+        for (right_index, right_value) in right {
             match right_index.cmp(&left_index) {
                 Ordering::Less => {}
                 Ordering::Equal => {
