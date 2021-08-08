@@ -77,6 +77,34 @@ where
     total
 }
 
+pub fn inner_product_slice_iter<'a, 'b, I: Ord, T1, T2: 'b, J: Iterator<Item=(I, &'b T2)>, O>(
+    left: &'a [(I, T1)], right: J,
+) -> O
+where
+    &'a T1: Mul<&'b T2, Output=O>,
+    O: num_traits::Zero + AddAssign,
+{
+    let mut total = O::zero();
+
+    let mut i = 0;
+    for (index, value) in right {
+        while i < left.len() && left[i].0 < index {
+            i += 1;
+        }
+
+        if i < left.len() && left[i].0 == index {
+            total += &left[i].1 * value;
+            i += 1;
+        }
+
+        if i == left.len() {
+            break;
+        }
+    }
+
+    total
+}
+
 /// Calculate the inner product between two vectors.
 ///
 /// # Arguments

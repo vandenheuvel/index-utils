@@ -12,6 +12,8 @@ mod num;
 pub use num::inner_product;
 #[cfg(feature = "num-traits")]
 pub use num::inner_product_slice;
+#[cfg(feature = "num-traits")]
+pub use num::inner_product_slice_iter;
 
 /// Reduce the size of the vector by removing values.
 ///
