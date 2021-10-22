@@ -1,5 +1,3 @@
-cargo-features = ["edition2021"]
-
 [package]
 name = "index-utils"
 version = "2.2.0"
