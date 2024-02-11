@@ -14,4 +14,4 @@ categories = ["algorithms", "data-structures"]
 num-traits = { version = "0.2.14", optional = true }
 
 [dev-dependencies]
-relp-num = "0.0.5"
+relp-num = "0.1.12"
