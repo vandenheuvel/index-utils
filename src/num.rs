@@ -121,9 +121,9 @@ where
     &'a T1: Mul<&'a T2, Output=O>,
     O: num_traits::Zero + AddAssign,
 {
-    debug_assert!(left.is_sorted_by(|a, b| Some(a.0.cmp(&b.0))));
+    debug_assert!(left.is_sorted_by_key(|(i, _)| i));
     debug_assert!(left.windows(2).all(|w| w[0].0 < w[1].0));
-    debug_assert!(right.is_sorted_by(|a, b| Some(a.0.cmp(&b.0))));
+    debug_assert!(right.is_sorted_by_key(|(i, _)| i));
     debug_assert!(right.windows(2).all(|w| w[0].0 < w[1].0));
 
     let mut total = O::zero();
@@ -263,7 +263,7 @@ mod test {
     #[test]
     fn test_inner_product_slice() {
         assert_eq!(inner_product_slice::<usize, i32, i32, _>(&[], &[]), 0);
-        assert_eq!(inner_product_slice(&[], &[(1, 5), (2, 7)]), 0);
+        assert_eq!(inner_product_slice::<i32, i32, i32, _>(&[], &[(1, 5), (2, 7)]), 0);
         assert_eq!(inner_product_slice::<_, _, i32, _>(&[(1, 5), (2, 7)], &[]), 0);
         assert_eq!(inner_product_slice(&[(0, 3)], &[(0, 5)]), 3 * 5);
         assert_eq!(inner_product_slice(&[(1, 3)], &[(1, 5)]), 3 * 5);
