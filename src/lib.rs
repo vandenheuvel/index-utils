@@ -1,4 +1,3 @@
-#![feature(extract_if)]
 #![feature(is_sorted)]
 
 use std::cmp::Ordering;
@@ -63,16 +62,16 @@ pub fn remove_sparse_indices<T>(vector: &mut Vec<(usize, T)>, indices: &[usize])
     }
 
     let mut nr_skipped_before = 0;
-    let _ = vector.extract_if(|(i, _)| {
+    vector.retain_mut(|(i, _)| {
         while nr_skipped_before < indices.len() && indices[nr_skipped_before] < *i {
             nr_skipped_before += 1;
         }
 
         if nr_skipped_before < indices.len() && indices[nr_skipped_before] == *i {
-            true
+            false
         } else {
             *i -= nr_skipped_before;
-            false
+            true
         }
     });
 }
@@ -258,7 +257,7 @@ mod test {
 
         let mut v: Vec<i32> = vec![];
         remove_indices(&mut v, &[]);
-        assert_eq!(v, vec![]);
+        assert!(v.is_empty());
     }
 
     #[test]
