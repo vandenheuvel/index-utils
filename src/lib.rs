@@ -1,6 +1,5 @@
-#![feature(drain_filter)]
+#![feature(extract_if)]
 #![feature(is_sorted)]
-#![feature(label_break_value)]
 
 use std::cmp::Ordering;
 use std::collections::HashSet;
@@ -64,7 +63,7 @@ pub fn remove_sparse_indices<T>(vector: &mut Vec<(usize, T)>, indices: &[usize])
     }
 
     let mut nr_skipped_before = 0;
-    vector.drain_filter(|(i, _)| {
+    let _ = vector.extract_if(|(i, _)| {
         while nr_skipped_before < indices.len() && indices[nr_skipped_before] < *i {
             nr_skipped_before += 1;
         }
