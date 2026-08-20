@@ -1,7 +1,10 @@
-#![feature(is_sorted)]
+//! # index-utils
+//!
+//! Utilities for working with indices, in particular with the sorted, unique index-value pairs
+//! that make up a sparse vector.
+#![warn(missing_docs)]
 
 use std::cmp::Ordering;
-use std::collections::HashSet;
 use std::mem::swap;
 
 #[cfg(feature = "num-traits")]
@@ -20,10 +23,8 @@ pub use num::inner_product_slice_iter;
 /// * `vector`: `Vec` to remove indices from.
 /// * `indices`: A sorted slice of indices to remove.
 pub fn remove_indices<T>(vector: &mut Vec<T>, indices: &[usize]) {
-    debug_assert!(indices.len() <= vector.len());
-    debug_assert!(indices.is_sorted());
-    // All values are unique
-    debug_assert!(indices.iter().collect::<HashSet<_>>().len() == indices.len());
+    // Sorted and unique
+    debug_assert!(indices.windows(2).all(|w| w[0] < w[1]));
     debug_assert!(indices.iter().all(|&i| i < vector.len()));
 
     let mut i = 0;
@@ -53,9 +54,8 @@ pub fn remove_indices<T>(vector: &mut Vec<T>, indices: &[usize]) {
 /// * `vector`: `Vec` to remove indices from.
 /// * `indices`: A sorted slice of indices to remove.
 pub fn remove_sparse_indices<T>(vector: &mut Vec<(usize, T)>, indices: &[usize]) {
-    debug_assert!(indices.is_sorted());
-    // All values are unique
-    debug_assert!(indices.iter().collect::<HashSet<_>>().len() == indices.len());
+    // Sorted and unique
+    debug_assert!(indices.windows(2).all(|w| w[0] < w[1]));
 
     if indices.is_empty() || vector.is_empty() {
         return;
@@ -83,13 +83,13 @@ pub fn remove_sparse_indices<T>(vector: &mut Vec<(usize, T)>, indices: &[usize])
 /// * `left`: The first iterator, sorted by index.
 /// * `right`: The second iterator, sorted by index.
 /// * `operation`: A binary operation applied when an element is found at some index in both
-/// iterators.
+///   iterators.
 /// * `operation_left`: A unitary operation applied when an element is found only in the left
-/// iterator.
+///   iterator.
 /// * `operation_right`: A unitary operation applied when an element is found only in the right
-/// iterator.
-/// * `is_not_default`: A function specifying whether the result if the binary operation is the
-/// default value (that is often zero).
+///   iterator.
+/// * `is_not_default`: A function specifying whether the result of an operation differs from the
+///   default value (that is often zero); only those results are collected.
 ///
 /// # Return value
 ///
@@ -149,9 +149,9 @@ pub fn merge_sparse_indices<I: Ord, T: Eq, U>(
 /// * `left`: The first iterator, sorted by index.
 /// * `right`: The second iterator, sorted by index.
 /// * `operation`: A binary operation applied when an element is found at some index in both
-/// iterators.
-/// * `is_not_default`: A function specifying whether the result if the binary operation is the
-/// default value (that is often zero).
+///   iterators.
+/// * `is_not_default`: A function specifying whether the result of an operation differs from the
+///   default value (that is often zero); only those results are collected.
 ///
 /// # Return value
 ///
