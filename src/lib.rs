@@ -233,8 +233,6 @@ mod test {
     use std::iter::empty;
     use std::ops::Add;
 
-    use relp_num::NonZero;
-
     use crate::{merge_sparse_indices, merge_sparse_indices_intersect, remove_indices, remove_sparse_indices};
 
     #[test]
@@ -313,7 +311,7 @@ mod test {
             Add::add,
             identity,
             identity,
-            NonZero::is_not_zero,
+            |value| *value != 0,
         );
         let expected = vec![];
         assert_eq!(result, expected);
@@ -328,7 +326,7 @@ mod test {
             Add::add,
             identity,
             identity,
-            NonZero::is_not_zero,
+            |value| *value != 0,
         );
         let expected = vec![(2, 1)];
         assert_eq!(result, expected);
@@ -343,7 +341,7 @@ mod test {
             Add::add,
             identity,
             identity,
-            NonZero::is_not_zero,
+            |value| *value != 0,
         );
         let expected = vec![(1, 6), (4, 9)];
         assert_eq!(result, expected);
@@ -358,7 +356,7 @@ mod test {
             Add::add,
             identity,
             identity,
-            NonZero::is_not_zero,
+            |value| *value != 0,
         );
         let expected = vec![(1, 15)];
         assert_eq!(result, expected);
@@ -373,7 +371,7 @@ mod test {
             Add::add,
             identity,
             identity,
-            NonZero::is_not_zero,
+            |value| *value != 0,
         );
         let expected = vec![(1, 6), (2, 9), (3, 4)];
         assert_eq!(result, expected);
