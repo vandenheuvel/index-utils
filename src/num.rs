@@ -8,17 +8,13 @@ use std::mem::swap;
 ///
 /// * `left`: The first iterator, sorted by index.
 /// * `right`: The second iterator, sorted by index.
-/// * `operation`: A binary operation applied when an element is found at some index in both
-/// iterators.
-/// * `is_not_default`: A function specifying whether the result if the binary operation is the
-/// default value (that is often zero).
 ///
 /// # Return value
 ///
-/// A vector with sparse elements by sorted and unique index.
+/// The sum of the products of the values that share an index.
 pub fn inner_product<I: Ord, T1, T2, O>(
     mut left: impl Iterator<Item=(I, T1)>,
-    mut right: impl Iterator<Item=(I, T2)>,
+    right: impl Iterator<Item=(I, T2)>,
 ) -> O
 where
     T1: Mul<T2, Output=O>,
@@ -27,7 +23,7 @@ where
     let mut total = O::zero();
 
     if let Some((mut left_index, mut left_value)) = left.next() {
-        while let Some((right_index, right_value)) = right.next() {
+        for (right_index, right_value) in right {
             match right_index.cmp(&left_index) {
                 Ordering::Less => {}
                 Ordering::Equal => {
@@ -77,6 +73,16 @@ where
     total
 }
 
+/// Calculate the inner product between a sparse slice and a sparse iterator.
+///
+/// # Arguments
+///
+/// * `left`: The slice, sorted by index.
+/// * `right`: The iterator, sorted by index.
+///
+/// # Return value
+///
+/// The sum of the products of the values that share an index.
 pub fn inner_product_slice_iter<'a, 'b, I: Ord, T1, T2: 'b, J: Iterator<Item=(I, &'b T2)>, O>(
     left: &'a [(I, T1)], right: J,
 ) -> O
@@ -84,6 +90,9 @@ where
     &'a T1: Mul<&'b T2, Output=O>,
     O: num_traits::Zero + AddAssign,
 {
+    // Sorted and unique
+    debug_assert!(left.windows(2).all(|w| w[0].0 < w[1].0));
+
     let mut total = O::zero();
 
     let mut i = 0;
@@ -121,9 +130,8 @@ where
     &'a T1: Mul<&'a T2, Output=O>,
     O: num_traits::Zero + AddAssign,
 {
-    debug_assert!(left.is_sorted_by_key(|(i, _)| i));
+    // Sorted and unique
     debug_assert!(left.windows(2).all(|w| w[0].0 < w[1].0));
-    debug_assert!(right.is_sorted_by_key(|(i, _)| i));
     debug_assert!(right.windows(2).all(|w| w[0].0 < w[1].0));
 
     let mut total = O::zero();

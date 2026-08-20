@@ -1,0 +1,156 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  # The test job runs on nightly, so a regression can arrive without any commit of ours.
+  # Run weekly to catch that before a user does.
+  schedule:
+    - cron: '0 6 * * 1'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Both feature sets matter: the inner product functions live behind the `num-traits` feature,
+  # so the default build never compiles them. Both profiles matter as well, because the
+  # preconditions of every function here are checked with `debug_assert!`, which release drops.
+  #
+  # These run on nightly rather than stable: the dev-dependency on relp-num pulls in smallvec's
+  # `specialization` feature. The library itself builds on stable, see the `stable` job.
+  test:
+    name: Test (${{ matrix.profile }}, ${{ matrix.features }} features)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [debug, release]
+        features: [default, all]
+        include:
+          - profile: debug
+            profile_flags: ''
+          - profile: release
+            profile_flags: '--release'
+          - features: default
+            feature_flags: ''
+          - features: all
+            feature_flags: '--all-features'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: test-${{ matrix.profile }}-${{ matrix.features }}
+
+      - name: Build all targets
+        run: cargo build --all-targets ${{ matrix.profile_flags }} ${{ matrix.feature_flags }}
+
+      - name: Test all targets
+        run: cargo test --all-targets ${{ matrix.profile_flags }} ${{ matrix.feature_flags }}
+
+      - name: Doc tests
+        run: cargo test --doc ${{ matrix.profile_flags }} ${{ matrix.feature_flags }}
+
+  # Blocking. The crate no longer uses any `#![feature(..)]`: `is_sorted` was stabilised in Rust
+  # 1.82 and the 2024 edition needs 1.85, so both are covered by any current stable toolchain.
+  # Only the library is built, because the dev-dependency on relp-num still forces nightly.
+  stable:
+    name: Stable Rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: stable
+
+      - name: Build on stable
+        run: cargo build --lib --all-features
+
+  # `missing_docs` is warn-by-default in lib.rs; this turns that and any broken intra-doc link
+  # into a failure, which is roughly what docs.rs will do.
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: docs
+
+      - name: Build documentation
+        run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  # Guards against a broken publish: catches missing files, a malformed manifest, and anything in
+  # the packaged tarball that does not build from a clean checkout.
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: package
+
+      - name: Verify the published tarball
+        run: cargo package
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: coverage
+
+      - uses: taiki-e/install-action@cargo-tarpaulin
+
+      - name: Collect coverage
+        run: cargo tarpaulin --lib --all-features --ignore-tests --out xml -- --test-threads 1
+
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # Blocking: the tree is clippy-clean under `-D warnings` with and without the feature.
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: clippy
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run clippy without default features
+        run: cargo clippy --all-targets --no-default-features -- -D warnings
